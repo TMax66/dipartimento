@@ -1,0 +1,183 @@
+---
+title: "Dipartimento Area Territoriale Lombardia: Attività Non Ufficiale (2019)"
+output: 
+  flexdashboard::flex_dashboard:
+    runtime: shiny
+---
+
+```{r global, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(readxl)
+library(lubridate)
+dati<- read_excel("dip19nonuff.xlsx")
+dati<-dati %>% 
+  mutate(Autocontrollo=ifelse(
+                                reparto=="Sede Territoriale di Pavia"|
+                                reparto=="Sede Territoriale di Binago"|
+                                reparto=="Sede Territoriale di Lodi"|
+                                reparto=="Sede Territoriale di Milano", "Sede Territoriale di Milano",
+                              ifelse(reparto=="Sede Territoriale di Bergamo"|
+                                reparto=="Sede Territoriale di Brescia"|
+                                       reparto=="Sede Territoriale di Cremona"|
+                                       reparto=="Sede Territoriale di Mantova", "Alimenti Brescia", 
+                                     "Sede Territoriale di Sondrio"
+                              )
+  ), TR=difftime(datrdp, dataconf, units = "days"),
+         TG=difftime(datainizio, dataconf, units = "days"), 
+ settimana=week(dataconf))
+
+```
+
+ESAMI  
+=========================================  
+
+Column {.sidebar} 
+-----------------------------------------------------------------------
+**Criteri di estrazione da Business Object**:
+
+- Anno di registrazione:2019 
+
+- Reparti che eseguono le prove: Sezioni Territoriali della Lombardia 
+
+- Tipologia campioni: Non ufficiali 
+
+- Settore: Alimenti Uomo 
+
+
+```{r}
+selectInput("pr", "Seleziona Prova", 
+            c("Tutte", unique(as.character(dati$prova))))
+  
+```
+
+Column
+-----------------------------------------------------------------------
+### Numero esami per reparto  
+
+```{r echo=FALSE}
+
+renderTable(
+  
+  if (input$pr=="Tutte")
+  {   
+  dati %>%  
+  group_by(reparto) %>% 
+  summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>% 
+  arrange(desc(tot)) %>% 
+  mutate(n.esami=as.character(tot)) %>% 
+      select(reparto, n.esami)
+    
+  } else
+  
+  {
+  dati %>% 
+  filter(prova==input$pr) %>% 
+  group_by(reparto) %>% 
+  summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>% 
+  arrange(desc(tot)) %>% 
+      mutate(n.esami=as.character(tot)) %>% 
+      select(reparto, n.esami)
+  }
+)
+```
+
+
+
+Column
+-----------------------------------------------------------------------
+### Ipotesi di ridistribuzione esami su Milano, Brescia e Sondrio
+
+```{r echo=FALSE}
+
+renderTable(
+
+  if (input$pr=="Tutte")
+  {
+  dati %>%
+  group_by(Autocontrollo) %>%
+  summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>%
+  arrange(desc(tot)) %>%
+      mutate(n.esami=as.character(tot)) %>%
+      select(Autocontrollo, n.esami)
+
+
+  } else
+
+  {
+  dati %>%
+  filter(prova==input$pr) %>%
+  group_by(Autocontrollo) %>%
+  summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>%
+  arrange(desc(tot)) %>%
+      mutate(n.esami=as.character(tot)) %>%
+      select(Autocontrollo, n.esami)
+  }
+)
+
+
+```
+
+TEMPI  
+=========================================  
+Column {.sidebar} 
+-----------------------------------------------------------------------
+
+```{r}
+selectInput("tt", "Tempi", 
+            c("Refertazione", "Gestione"))
+  
+```
+
+Column {-tabset}
+-------------------------------------
+###
+
+```{r}
+renderPlot(
+
+  if(input$tt=="Refertazione")
+  {
+dati %>%
+  ggplot(aes(x=TR))+geom_bar()+xlim(0,10)+
+  theme_light(base_size = 16)+facet_wrap(~reparto)+xlab("Tempi di refertazione (giorni): data emissione Rdp - data accettazione")+theme(strip.text.x = element_text(size = 18))+ylab("n.esami")
+  }else
+  {
+dati %>%
+  ggplot(aes(x=TG))+geom_bar()+xlim(0,5)+
+  theme_light(base_size = 16)+facet_wrap(~reparto)+xlab("Tempi di gestione del campione (giorni): data inizio analisi - data accettazione")+theme(strip.text.x = element_text(size = 18))+ylab("n.esami")
+  }
+)
+```
+
+
+ATTIVITA'
+=========================================  
+
+### Andamento settimanale del numero di esami per reparto
+```{r}
+renderPlot(
+   dati %>%
+    group_by(reparto, settimana) %>%
+    summarise(tot=sum(esami, na.rm=TRUE)) %>%
+    ggplot(aes(x=settimana, y=tot))+geom_point()+geom_line()+
+    facet_wrap(~reparto)+theme_light(base_size = 16)+labs(y="n.esami/settimana")+
+      theme(strip.text.x = element_text(size = 18))
+)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
