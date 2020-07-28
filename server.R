@@ -16,7 +16,7 @@ server<-function(input, output) {
       
     {
       dati %>% 
-        filter(prova==input$pr) %>% 
+        filter(gruppoM==input$pr) %>% 
         group_by(reparto) %>% 
         summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>% 
         arrange(desc(tot)) %>% 
@@ -41,7 +41,7 @@ server<-function(input, output) {
       
     {
       dati %>%
-        filter(prova==input$pr) %>%
+        filter(gruppoM==input$pr) %>%
         group_by(Autocontrollo) %>%
         summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>%
         arrange(desc(tot)) %>%

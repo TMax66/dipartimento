@@ -18,8 +18,8 @@ tags$p("Settore: Alimenti Uomo"),
                 
                 hr(),
                 
-                 selectInput("pr", "Seleziona Prova", 
-                             c("Tutte", unique(as.character(dati$prova))))
+                 selectInput("pr", "Seleziona Gruppo Matrice", 
+                             c("Tutte", unique(as.character(dati$gruppoM))))
                ), 
                mainPanel(
                  column(6, 

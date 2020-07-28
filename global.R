@@ -6,7 +6,7 @@ library(shinythemes)
 library(DT)
 
 
-dati<- read_excel("dip19nonuff.xlsx")
+dati<- read_excel("autocontrollo.xlsx")
 dati<-dati %>% 
   mutate(Autocontrollo=ifelse(
                                 reparto=="Sede Territoriale di Pavia"|
