@@ -76,6 +76,27 @@ server<-function(input, output) {
   )
   
   
+  output$clienti <- renderPlot(
+    
+    dati %>% 
+      mutate(Matrici=fct_lump_min(gruppoM, 603, other_level = "Altro")) %>% 
+      mutate(Clienti=fct_lump_min(destfatt, 261, other_level = "Altri")) %>% 
+      filter(Clienti=input$cl) %>% 
+      group_by(reparto,Matrici) %>% 
+      summarise(Esami=sum(esami)) %>% 
+      arrange(desc(Esami)) %>% 
+      ggplot()+
+      aes(x=Matrici,y=Esami)+
+      geom_bar(stat="identity")+
+      coord_flip()+
+      facet_wrap(~reparto)
+
+    
+  )
+  
+  
+  
+  
   output$tab <- DT::renderDataTable(
                 dati[, 1:15], 
                 filter = 'top',class = 'cell-border stripe',

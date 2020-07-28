@@ -15,6 +15,7 @@ library(lubridate)
 library(shinythemes)
 library(DT)
 library(tm)
+library(rpivotTable)
   
 
 dati2<- read_excel("autocontrollo.xlsx")
@@ -37,18 +38,41 @@ dati<-dati2 %>%
 
 
 
-dati %>%
-  filter(prova==input$pr) %>%
-  group_by(Autocontrollo) %>%
-  summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>%
-  arrange(desc(tot)) %>%
-  mutate(n.esami=as.character(tot)) %>%
-  select(Autocontrollo, n.esami)
+dati %>% 
+  
+  group_by(gruppoM) %>% 
+  summarise(Esami=sum(esami)) %>%  
+  arrange(desc(Esami))
 
-dati %>%
-  group_by(Autocontrollo) %>%
-  summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>%
-  arrange(desc(tot)) %>%
-  mutate(n.esami=as.character(tot)) %>%
-  select(Autocontrollo, n.esami)
+
+dati %>%  
+  group_by(destfatt) %>% 
+  summarise(Esami=sum(esami)) %>% 
+  arrange(desc(Esami))
+
+  
+dati %>% mutate(Clienti=fct_lump_min(destfatt, 261, other_level = "Altri")) %>% 
+   group_by(Clienti) %>% 
+   summarise(Esami=sum(esami)) %>% 
+   arrange(desc(Esami))
+
+
+
+
+
+
+dati %>% 
+  mutate(Matrici=fct_lump_min(gruppoM, 603, other_level = "Altro")) %>% 
+  mutate(Clienti=fct_lump_min(destfatt, 261, other_level = "Altri")) %>% 
+  group_by(reparto,Matrici, Clienti) %>% 
+  summarise(Esami=sum(esami)) %>% 
+  arrange(desc(Esami)) %>% 
+  ggplot()+
+  aes(x=Matrici,y=Esami)+
+  geom_bar(stat="identity")+
+  coord_flip()+
+  facet_wrap(~Clienti)
+  
+  
+
 

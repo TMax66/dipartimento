@@ -19,7 +19,9 @@ tags$p("Settore: Alimenti Uomo"),
                 hr(),
                 
                  selectInput("pr", "Seleziona Gruppo Matrice", 
-                             c("Tutte", unique(as.character(dati$gruppoM))))
+                             c("Tutte", "3.CARNE, PRODOTTI A BASE DI CARNE, CACCIAGIONE E POLLAME",
+                               "22.IGIENE DELLA MACELLAZIONE", "23.ACQUA", "24.TAMPONI AMBIENTALI",
+                               "1.PRODOTTI LATTIERO CASEARI"))
                ), 
                mainPanel(
                  column(6, 

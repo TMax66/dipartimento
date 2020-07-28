@@ -21,4 +21,6 @@ dati<-dati %>%
                               )
   ), TR=difftime(datrdp, dataconf, units = "days"),
          TG=difftime(datainizio, dataconf, units = "days"), 
- settimana=week(dataconf))
+ settimana=week(dataconf)
+
+ )
