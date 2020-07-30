@@ -19,9 +19,9 @@ tags$p("Settore: Alimenti Uomo"),
                 hr(),
                 
                  selectInput("pr", "Seleziona Gruppo Matrice", 
-                             c("Tutte", "3.CARNE, PRODOTTI A BASE DI CARNE, CACCIAGIONE E POLLAME",
-                               "22.IGIENE DELLA MACELLAZIONE", "23.ACQUA", "24.TAMPONI AMBIENTALI",
-                               "1.PRODOTTI LATTIERO CASEARI"))
+                             c("Tutte", "CARNI E DERIVATI",
+                               "IGIENE DELLA MAC", "ACQUA", "TAMPONI-AMBIENTALI",
+                               "PROD.LATTIERO CASEARI"))
                ), 
                mainPanel(
                  column(6, 
@@ -30,9 +30,6 @@ tags$p("Settore: Alimenti Uomo"),
                  column(6, 
                         tags$p("Ipotesi di ridistribuzione esami su Milano, Brescia e Sondrio"),
                         tableOutput("es2"))
-                 
-                 
-                 
                  
                )
              )),
@@ -57,6 +54,30 @@ tags$p("Settore: Alimenti Uomo"),
                     )
 
                     ), 
+           tabPanel("CLIENTI", 
+                    sidebarLayout(
+                      sidebarPanel(
+                        selectInput("rep", "Seleziona Reparto", 
+                            c(unique(as.character(dati$reparto))) ),
+                        sliderInput("mes", "media settimanale n. di esami", 
+                                    min=1, max= 30, value=10),
+                        sliderInput("nset", "Numero di settimane di conferimenti",
+                                    min=1, max=20, value = 10)),
+                      
+                   
+                    mainPanel(
+                     
+                      plotOutput("timecl"), 
+                      hr(),
+                      br(),
+                      tableOutput("clienti")
+                        
+                      )
+                    
+                    )), 
+         
+                  
+                    
 
            tabPanel("DATI", 
                    
@@ -65,6 +86,7 @@ tags$p("Settore: Alimenti Uomo"),
                       )
                     )
            )
+
                     
              
 

@@ -16,7 +16,7 @@ server<-function(input, output) {
       
     {
       dati %>% 
-        filter(gruppoM==input$pr) %>% 
+        filter(Matrici==input$pr) %>% 
         group_by(reparto) %>% 
         summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>% 
         arrange(desc(tot)) %>% 
@@ -41,7 +41,7 @@ server<-function(input, output) {
       
     {
       dati %>%
-        filter(gruppoM==input$pr) %>%
+        filter(Matrici==input$pr) %>%
         group_by(Autocontrollo) %>%
         summarise(tot=round(sum(esami, na.rm=TRUE),0)) %>%
         arrange(desc(tot)) %>%
@@ -76,24 +76,81 @@ server<-function(input, output) {
   )
   
   
-  output$clienti <- renderPlot(
-    
-    dati %>% 
-      mutate(Matrici=fct_lump_min(gruppoM, 603, other_level = "Altro")) %>% 
-      mutate(Clienti=fct_lump_min(destfatt, 261, other_level = "Altri")) %>% 
-      filter(Clienti=input$cl) %>% 
-      group_by(reparto,Matrici) %>% 
-      summarise(Esami=sum(esami)) %>% 
-      arrange(desc(Esami)) %>% 
-      ggplot()+
-      aes(x=Matrici,y=Esami)+
-      geom_bar(stat="identity")+
-      coord_flip()+
-      facet_wrap(~reparto)
-
-    
-  )
   
+  
+  
+  ####grafici andamento n.esami/settimana x reparto e per i topclient####
+  
+  
+  # topClient<-reactive {
+  #   dati %>% 
+  #   filter(reparto=="input$rep") %>% 
+  #   group_by(destfatt) %>% 
+  #   summarise(Esami=sum(esami)) %>% 
+  #   arrange(desc(Esami)) %>% 
+  #   top_n(input$top)
+  # }
+  
+  
+  
+
+  
+    # dati %>% 
+    #   filter(destfatt %in% topClient()$destfatt) %>% 
+    #   group_by(destfatt, settimana) %>% 
+    #   summarise(Esami=sum(esami)) %>% 
+    #   ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_point()+geom_line()+
+    #   theme_light(base_size = 16)+labs(y="n.esami/settimana")+
+    #   theme(strip.text.x = element_text(size = 18))+
+    #   theme(legend.position = element_blank())
+    
+    x<- reactive({ 
+      dati %>% 
+      filter(reparto == input$rep) %>% 
+      group_by(destfatt, settimana) %>% 
+      summarise(Esami=sum(esami))
+      })
+    
+    z<-reactive({dati %>% 
+      filter(reparto == input$rep) %>% 
+      group_by(destfatt, settimana) %>% 
+      summarise(Esami=sum(esami)) %>% 
+      group_by(destfatt) %>% 
+      summarise(n=n()) })
+    
+   
+   output$timecl <-renderPlot(
+     
+     x() %>% 
+       left_join(z(), by="destfatt") %>% 
+       filter(n > input$nset) %>% 
+       ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
+       theme(legend.position = "none")+
+       gghighlight(mean(Esami) > input$mes,  label_key = destfatt) 
+     
+   )
+    
+  
+   output$clienti <- renderTable(
+     
+     x()%>% 
+       left_join(z(), by="destfatt") %>% 
+       filter(Esami > input$mes & n > input$nset) %>% 
+       group_by("Cliente" = destfatt) %>% 
+       summarise("Totale esami" = sum(Esami), 
+                 "Media settimanale" = mean((Esami))) %>% 
+       arrange(desc("Totale esami"))
+     
+   )
+    
+    
+    
+   
+      
+    
+    
+    
+
   
   
   
