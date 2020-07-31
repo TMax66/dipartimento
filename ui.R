@@ -58,7 +58,7 @@ tags$p("Settore: Alimenti Uomo"),
                     sidebarLayout(
                       sidebarPanel(
                         selectInput("rep", "Seleziona Reparto", 
-                            c(unique(as.character(dati$reparto))) ),
+                            c( "Tutti", unique(as.character(dati$reparto))) ),
                         sliderInput("mes", "media settimanale n. di esami", 
                                     min=1, max= 30, value=10),
                         sliderInput("nset", "Numero di settimane di conferimenti",
@@ -70,11 +70,18 @@ tags$p("Settore: Alimenti Uomo"),
                       plotOutput("timecl"), 
                       hr(),
                       br(),
-                      tableOutput("clienti")
+                      DT::dataTableOutput("clienti")
                         
                       )
                     
                     )), 
+           tabPanel("TABELLA PIVOT", 
+                      fluidPage(
+                        fluidRow(
+                          column(6,div(style="height:10px"),rpivotTableOutput("pivot") )
+                          
+                        ))
+           ),
          
                   
                     

@@ -1,6 +1,6 @@
 server<-function(input, output) { 
   
-  
+
   output$es<-renderTable(
     
     if (input$pr=="Tutte")
@@ -119,40 +119,99 @@ server<-function(input, output) {
       summarise(n=n()) })
     
    
+    
+    
+    
    output$timecl <-renderPlot(
+     
+     if(input$rep!="Tutti")
+     {   
      
      x() %>% 
        left_join(z(), by="destfatt") %>% 
        filter(n > input$nset) %>% 
        ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
        theme(legend.position = "none")+
-       gghighlight(mean(Esami) > input$mes,  label_key = destfatt) 
-     
+       gghighlight(mean(Esami) > input$mes,label_key = destfatt) 
+     } else
+       
+     {    
+       
+      
+       x1<- dati %>%
+           group_by(destfatt, settimana) %>% 
+           summarise(Esami=sum(esami))
+      
+       z1<-dati %>% 
+         group_by(destfatt, settimana) %>% 
+         summarise(Esami=sum(esami)) %>% 
+         group_by(destfatt) %>% 
+         summarise(n=n())
+       
+     x1%>% 
+       left_join(z1, by="destfatt") %>% 
+       filter(n > input$nset) %>% 
+       ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
+       theme(legend.position = "none")+
+       gghighlight(mean(Esami) > input$mes,label_key = destfatt) 
+       
+     }
+       
+       
    )
-    
+      
   
-   output$clienti <- renderTable(
+   output$clienti <- DT::renderDataTable(server = FALSE,
+   class = 'cell-border stripe', rownames=FALSE,
+   extensions = 'Buttons',options = list(dom="Brtip", pageLength = 10,
+   searching = FALSE,paging = TRUE,autoWidth = TRUE,
+   buttons = c('excel')),
+     
+     if(input$rep!="Tutti")
+       
+     {
+     
      
      x()%>% 
        left_join(z(), by="destfatt") %>% 
        filter(Esami > input$mes & n > input$nset) %>% 
        group_by("Cliente" = destfatt) %>% 
-       summarise("Totale esami" = sum(Esami), 
-                 "Media settimanale" = mean((Esami))) %>% 
+         summarise("Totale esami" = sum(Esami), 
+                   "Media settimanale" = round(mean((Esami)),2)) %>% 
        arrange(desc("Totale esami"))
      
-   )
-    
-    
-    
-   
-      
-    
-    
-    
+     }else
+       
+     {
+       x1<- dati %>%
+         group_by(destfatt, settimana) %>% 
+         summarise(Esami=sum(esami))
+       
+       z1<-dati %>% 
+         group_by(destfatt, settimana) %>% 
+         summarise(Esami=sum(esami)) %>% 
+         group_by(destfatt) %>% 
+         summarise(n=n())
+       x1%>% 
+         left_join(z1, by="destfatt") %>% 
+         filter(Esami > input$mes & n > input$nset) %>% 
+         group_by("Cliente" = destfatt) %>% 
+         summarise("Totale esami" = sum(Esami), 
+                   "Media settimanale" = round(mean((Esami)),2)) %>% 
+         arrange(desc("Totale esami"))
 
-  
-  
+     })
+   
+   
+#Pivot Table####
+
+output$pivot <- renderRpivotTable({
+  dx<-dati %>% 
+    dplyr::select(regione, provincia, reparto, Matrici, "Clienti"=destfatt, esami)
+  rpivotTable(dx,aggregatorName="Integer Sum", vals="esami")
+})
+
+
   
   output$tab <- DT::renderDataTable(
                 dati[, 1:15], 

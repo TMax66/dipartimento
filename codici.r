@@ -161,10 +161,25 @@ z<-dati %>%
 
 x %>% 
   left_join(z, by="destfatt") %>% 
-  filter(Esami >15 & n >5) %>% 
+ # filter(Esami >4 & n >6) %>% 
   group_by(destfatt) %>% 
   summarise(N.esami=sum(Esami), 
-            M.esami=mean((Esami)))
+            M.esami=mean((Esami))) %>% 
+  arrange(desc(N.esami))
 
-  
+
+x %>% 
+  left_join(z, by="destfatt") %>%
+  ungroup() %>% 
+  filter(n > 5) %>% 
+  ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
+  theme(legend.position = "none")+
+  gghighlight(mean(Esami) > 10, label_key = destfatt) +
+  facet_wrap(~ destfatt)
+
+
+dx<-dati %>% 
+  dplyr::select(provincia, reparto, Matrici, "Clienti"=destfatt, esami)
+
+rpivotTable(dx,aggregatorName="Integer Sum", vals="esami")
   

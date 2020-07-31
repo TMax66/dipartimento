@@ -4,6 +4,8 @@ library(readxl)
 library(lubridate)
 library(shinythemes)
 library(DT)
+library(gghighlight)
+library(rpivotTable)
 
 
 dati<- read_excel("autocontrollo.xlsx")
