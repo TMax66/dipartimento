@@ -147,39 +147,26 @@ dati %>%
   gghighlight(mean(Esami) > 15,  label_key = destfatt) 
 
 
-x<-dati %>% 
-  filter(Sezioni=="BG") %>% 
-  group_by(destfatt, settimana) %>% 
-  summarise(Esami=sum(esami))
+
+x<-  
+  dati  %>% 
+  filter(reparto == "Sede Territoriale di Bergamo") %>% 
+    group_by(destfatt, settimana) %>% 
+    summarise(Esami=sum(esami))
+
 
 z<-dati %>% 
-  filter(Sezioni=="BG") %>% 
-  group_by(destfatt, settimana) %>% 
-  summarise(Esami=sum(esami)) %>% 
-  group_by(destfatt) %>% 
-  summarise(n=n()) 
+    filter(reparto == "Sede Territoriale di Bergamo") %>% 
+    group_by(destfatt, settimana) %>% 
+    summarise(Esami=sum(esami)) %>% 
+    group_by(destfatt) %>% 
+    summarise(n=n())
 
-x %>% 
+zz<-x %>% 
   left_join(z, by="destfatt") %>% 
- # filter(Esami >4 & n >6) %>% 
-  group_by(destfatt) %>% 
-  summarise(N.esami=sum(Esami), 
-            M.esami=mean((Esami))) %>% 
-  arrange(desc(N.esami))
-
-
-x %>% 
-  left_join(z, by="destfatt") %>%
-  ungroup() %>% 
-  filter(n > 5) %>% 
+  #View()
+  #filter(destfatt== input$nset) %>% 
   ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
   theme(legend.position = "none")+
-  gghighlight(mean(Esami) > 10, label_key = destfatt) +
-  facet_wrap(~ destfatt)
-
-
-dx<-dati %>% 
-  dplyr::select(provincia, reparto, Matrici, "Clienti"=destfatt, esami)
-
-rpivotTable(dx,aggregatorName="Integer Sum", vals="esami")
+  gghighlight(mean(Esami)> 11 , max(n) >= 28 , label_key = destfatt) 
   

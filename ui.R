@@ -60,10 +60,7 @@ tags$p("Settore: Alimenti Uomo"),
                         selectInput("rep", "Seleziona Reparto", 
                             c( "Tutti", unique(as.character(dati$reparto))) ),
                         sliderInput("mes", "media settimanale n. di esami", 
-                                    min=1, max= 30, value=10),
-                        sliderInput("nset", "Numero di settimane di conferimenti",
-                                    min=1, max=20, value = 10)),
-                      
+                                    min=1, max= 50, value=10)),
                    
                     mainPanel(
                      
@@ -78,10 +75,13 @@ tags$p("Settore: Alimenti Uomo"),
            tabPanel("TABELLA PIVOT", 
                       fluidPage(
                         fluidRow(
-                          column(6,div(style="height:10px"),rpivotTableOutput("pivot") )
+                          downloadButton("download_pivot", label = "Excel")), 
+                          fluidRow(
+                          column(6,div(style="height:10px"),rpivotTableOutput("pivot")
+                                ))
                           
                         ))
-           ),
+           ,
          
                   
                     

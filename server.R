@@ -120,8 +120,7 @@ server<-function(input, output) {
     
    
     
-    
-    
+#Grafico clienti####
    output$timecl <-renderPlot(
      
      if(input$rep!="Tutti")
@@ -129,10 +128,10 @@ server<-function(input, output) {
      
      x() %>% 
        left_join(z(), by="destfatt") %>% 
-       filter(n > input$nset) %>% 
+      # filter(n > input$nset) %>% 
        ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
        theme(legend.position = "none")+
-       gghighlight(mean(Esami) > input$mes,label_key = destfatt) 
+       gghighlight(mean(Esami) >=input$mes, label_key = destfatt) 
      } else
        
      {    
@@ -150,17 +149,17 @@ server<-function(input, output) {
        
      x1%>% 
        left_join(z1, by="destfatt") %>% 
-       filter(n > input$nset) %>% 
+      # filter(n > input$nset) %>% 
        ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
        theme(legend.position = "none")+
-       gghighlight(mean(Esami) > input$mes,label_key = destfatt) 
+       gghighlight(mean(Esami) >= input$mes, label_key = destfatt) 
        
      }
        
        
    )
       
-  
+#Tabella clienti####  
    output$clienti <- DT::renderDataTable(server = FALSE,
    class = 'cell-border stripe', rownames=FALSE,
    extensions = 'Buttons',options = list(dom="Brtip", pageLength = 10,
@@ -174,10 +173,11 @@ server<-function(input, output) {
      
      x()%>% 
        left_join(z(), by="destfatt") %>% 
-       filter(Esami > input$mes & n > input$nset) %>% 
+       filter(Esami > input$mes) %>% 
        group_by("Cliente" = destfatt) %>% 
          summarise("Totale esami" = sum(Esami), 
-                   "Media settimanale" = round(mean((Esami)),2)) %>% 
+                   "Media settimanale" = round(mean((Esami)),2),
+                   "N.settimane" = max(n)) %>% 
        arrange(desc("Totale esami"))
      
      }else
@@ -194,11 +194,13 @@ server<-function(input, output) {
          summarise(n=n())
        x1%>% 
          left_join(z1, by="destfatt") %>% 
-         filter(Esami > input$mes & n > input$nset) %>% 
-         group_by("Cliente" = destfatt) %>% 
+         group_by("Cliente" = destfatt, n) %>% 
          summarise("Totale esami" = sum(Esami), 
-                   "Media settimanale" = round(mean((Esami)),2)) %>% 
-         arrange(desc("Totale esami"))
+                   "Media settimanale" = round(mean((Esami)),2),
+                   "N.settimane" = max(n)) %>% 
+         select(-n) %>% 
+         arrange(desc("Totale esami")) 
+        
 
      })
    
@@ -208,10 +210,56 @@ server<-function(input, output) {
 output$pivot <- renderRpivotTable({
   dx<-dati %>% 
     dplyr::select(regione, provincia, reparto, Matrici, "Clienti"=destfatt, esami)
-  rpivotTable(dx,aggregatorName="Integer Sum", vals="esami")
+  rpivotTable(dx,aggregatorName="Integer Sum", vals="esami", 
+              onRefresh = htmlwidgets::JS(
+                        "function(config) {
+                        Shiny.onInputChange('pivot', document.getElementById('pivot').innerHTML); 
+                        }"))
 })
 
 
+pivot_tbl <- eventReactive(input$pivot, {
+     tryCatch({
+       input$pivot %>%
+         read_html %>%
+         html_table(fill = TRUE) %>%
+         .[[2]]
+     }, error = function(e) {
+       return()
+     })
+   })
+
+observe({
+  if (is.data.frame(pivot_tbl()) && nrow(pivot_tbl()) > 0) {
+    shinyjs::enable("download_pivot")
+  } else {
+    shinyjs::disable("download_pivot")
+  }
+})
+
+output$download_pivot <- downloadHandler(
+  filename = function() {
+    "pivot.xlsx"
+  },
+  content = function(file) {
+    writexl::write_xlsx(pivot_tbl(), path = file)
+  }
+  
+)
+          
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
   
   output$tab <- DT::renderDataTable(
                 dati[, 1:15], 
@@ -220,4 +268,6 @@ output$pivot <- renderRpivotTable({
                                pageLength = 10))
   
 
-  }
+}
+
+

@@ -6,9 +6,10 @@ library(shinythemes)
 library(DT)
 library(gghighlight)
 library(rpivotTable)
+library(shinyjs)
 
 
-dati<- read_excel("autocontrollo.xlsx")
+  dati<- read_excel("autocontrollo.xlsx")
 dati<-dati %>% 
   mutate(Autocontrollo=ifelse(
                                 reparto=="Sede Territoriale di Pavia"|
