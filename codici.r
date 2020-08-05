@@ -111,18 +111,12 @@ dati %>% mutate(Clienti=fct_lump_min(destfatt, 261, other_level = "Altri")) %>%
    arrange(desc(Esami))
 
 
-
-
-
-
-
-
 topClient<-dati %>% 
-  filter(reparto=="Sede Territoriale di Bergamo") %>% 
+  # filter(reparto=="Sede Territoriale di Bergamo") %>% 
   group_by(destfatt) %>% 
   summarise(Esami=sum(esami)) %>% 
   arrange(desc(Esami)) %>% 
-top_n(10)
+top_n(5)
 
 
 dati %>% 
@@ -133,40 +127,28 @@ dati %>%
   theme_light(base_size = 16)+labs(y="n.esami/settimana")+
   theme(strip.text.x = element_text(size = 18))+
   theme(legend.position = "none")
-  
- 
-  
-  
-dati %>% 
-  filter(Sezioni=="BG") %>% 
-  group_by(destfatt, settimana) %>% 
-  summarise(Esami=sum(esami)) %>% 
-  ungroup() %>% 
-  ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
-  theme(legend.position = "none")+
-  gghighlight(mean(Esami) > 15,  label_key = destfatt) 
 
 
 
 x<-  
-  dati  %>% 
-  filter(reparto == "Sede Territoriale di Bergamo") %>% 
-    group_by(destfatt, settimana) %>% 
+    dati  %>%
+    filter(destfatt %in% topClient$destfatt) %>% 
+    group_by(destfatt, settimana) %>%
     summarise(Esami=sum(esami))
 
+  z<-dati %>%
+    filter(destfatt %in% topClient$destfatt) %>% 
+    group_by(destfatt, settimana) %>%
+    summarise(Esami=sum(esami)) %>%
+    group_by(destfatt) %>%
+    summarise(n=n()) 
 
-z<-dati %>% 
-    filter(reparto == "Sede Territoriale di Bergamo") %>% 
-    group_by(destfatt, settimana) %>% 
-    summarise(Esami=sum(esami)) %>% 
-    group_by(destfatt) %>% 
-    summarise(n=n())
-
-zz<-x %>% 
-  left_join(z, by="destfatt") %>% 
-  #View()
-  #filter(destfatt== input$nset) %>% 
-  ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
-  theme(legend.position = "none")+
-  gghighlight(mean(Esami)> 11 , max(n) >= 28 , label_key = destfatt) 
+  x%>% 
+    left_join(z, by="destfatt") %>% 
+    group_by("Cliente" = destfatt, n) %>% 
+    summarise("Totale esami" = sum(Esami), 
+              "Media settimanale" = round(mean((Esami)),2),
+              "N.settimane" = max(n)) %>% 
+    select(-n) %>% 
+    arrange(desc("Totale esami")) 
   

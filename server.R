@@ -104,61 +104,67 @@ server<-function(input, output) {
     #   theme(strip.text.x = element_text(size = 18))+
     #   theme(legend.position = element_blank())
     
-    x<- reactive({ 
-      dati %>% 
-      filter(reparto == input$rep) %>% 
-      group_by(destfatt, settimana) %>% 
-      summarise(Esami=sum(esami))
-      })
-    
-    z<-reactive({dati %>% 
-      filter(reparto == input$rep) %>% 
-      group_by(destfatt, settimana) %>% 
-      summarise(Esami=sum(esami)) %>% 
-      group_by(destfatt) %>% 
-      summarise(n=n()) })
+    # x<- reactive({ 
+    #   dati %>% 
+    #   filter(reparto == input$rep) %>% 
+    #   group_by(destfatt, settimana) %>% 
+    #   summarise(Esami=sum(esami))
+    #   })
+    # 
+    # z<-reactive({dati %>% 
+    #   filter(reparto == input$rep) %>% 
+    #   group_by(destfatt, settimana) %>% 
+    #   summarise(Esami=sum(esami)) %>% 
+    #   group_by(destfatt) %>% 
+    #   summarise(n=n()) })
     
    
+ 
     
 #Grafico clienti####
-   output$timecl <-renderPlot(
-     
-     if(input$rep!="Tutti")
-     {   
-     
-     x() %>% 
-       left_join(z(), by="destfatt") %>% 
-      # filter(n > input$nset) %>% 
-       ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
-       theme(legend.position = "none")+
-       gghighlight(mean(Esami) >=input$mes, label_key = destfatt) 
-     } else
-       
-     {    
-       
-      
-       x1<- dati %>%
-           group_by(destfatt, settimana) %>% 
-           summarise(Esami=sum(esami))
-      
-       z1<-dati %>% 
-         group_by(destfatt, settimana) %>% 
-         summarise(Esami=sum(esami)) %>% 
-         group_by(destfatt) %>% 
-         summarise(n=n())
-       
-     x1%>% 
-       left_join(z1, by="destfatt") %>% 
-      # filter(n > input$nset) %>% 
-       ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_line()+
-       theme(legend.position = "none")+
-       gghighlight(mean(Esami) >= input$mes, label_key = destfatt) 
-       
-     }
-       
-       
-   )
-      
+   # output$timecl <-renderPlot(
+   #   
+   #   if(input$rep!="Tutti")
+   #   {   
+   #     
+   #     topClient<-dati %>% 
+   #         filter(reparto== input$rep) %>% 
+   #         group_by(destfatt) %>% 
+   #         summarise(Esami=sum(esami)) %>% 
+   #         arrange(desc(Esami)) %>% 
+   #         top_n(input$mes)
+   #     dati %>% 
+   #       filter(destfatt %in% topClient$destfatt) %>% 
+   #       group_by(destfatt, settimana) %>% 
+   #       summarise(Esami=sum(esami)) %>% 
+   #       ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_point()+geom_line()+
+   #       theme_light(base_size = 16)+labs(y="n.esami/settimana")+
+   #       theme(strip.text.x = element_text(size = 18))+
+   #       theme(legend.position = "none")
+   #     
+   # 
+   #   } else
+   #     
+   #   {  
+   #     topClient<-dati %>% 
+   #         group_by(destfatt) %>% 
+   #         summarise(Esami=sum(esami)) %>% 
+   #         arrange(desc(Esami)) %>% 
+   #         top_n(input$mes)
+   # 
+   #     dati %>% 
+   #       filter(destfatt %in% topClient$destfatt) %>% 
+   #       group_by(destfatt, settimana) %>% 
+   #       summarise(Esami=sum(esami)) %>% 
+   #       ggplot(aes(x=settimana, y=Esami, col=destfatt))+geom_point()+geom_line()+
+   #       theme_light(base_size = 16)+labs(y="n.esami/settimana")+
+   #       theme(strip.text.x = element_text(size = 18))+
+   #       theme(legend.position = "none")
+   #   }
+   #     
+   #     
+   # )
+   #    
 #Tabella clienti####  
    output$clienti <- DT::renderDataTable(server = FALSE,
    class = 'cell-border stripe', rownames=FALSE,
@@ -169,31 +175,60 @@ server<-function(input, output) {
      if(input$rep!="Tutti")
        
      {
+       topClient<-dati %>% 
+         filter(reparto== input$rep) %>% 
+         group_by(destfatt) %>% 
+         summarise(Esami=sum(esami)) %>% 
+         arrange(desc(Esami)) %>% 
+         top_n(input$mes)
      
-     
-     x()%>% 
-       left_join(z(), by="destfatt") %>% 
-       filter(Esami > input$mes) %>% 
-       group_by("Cliente" = destfatt) %>% 
+       x<-  
+         dati  %>%
+         filter(destfatt %in% topClient$destfatt) %>% 
+         group_by(destfatt, settimana) %>%
+         summarise(Esami=sum(esami))
+       
+       z<-dati %>%
+         filter(destfatt %in% topClient$destfatt) %>% 
+         group_by(destfatt, settimana) %>%
+         summarise(Esami=sum(esami)) %>%
+         group_by(destfatt) %>%
+         summarise(n=n()) 
+       
+       x%>% 
+         left_join(z, by="destfatt") %>% 
+         group_by("Cliente" = destfatt, n) %>% 
          summarise("Totale esami" = sum(Esami), 
                    "Media settimanale" = round(mean((Esami)),2),
                    "N.settimane" = max(n)) %>% 
-       arrange(desc("Totale esami"))
+         select(-n) %>% 
+         arrange(desc("Totale esami")) 
+     
      
      }else
        
      {
-       x1<- dati %>%
-         group_by(destfatt, settimana) %>% 
+       topClient<-dati %>% 
+         group_by(destfatt) %>% 
+         summarise(Esami=sum(esami)) %>% 
+         arrange(desc(Esami)) %>% 
+         top_n(input$mes)
+       
+       x<-  
+         dati  %>%
+         filter(destfatt %in% topClient$destfatt) %>% 
+         group_by(destfatt, settimana) %>%
          summarise(Esami=sum(esami))
        
-       z1<-dati %>% 
-         group_by(destfatt, settimana) %>% 
-         summarise(Esami=sum(esami)) %>% 
-         group_by(destfatt) %>% 
-         summarise(n=n())
-       x1%>% 
-         left_join(z1, by="destfatt") %>% 
+       z<-dati %>%
+         filter(destfatt %in% topClient$destfatt) %>% 
+         group_by(destfatt, settimana) %>%
+         summarise(Esami=sum(esami)) %>%
+         group_by(destfatt) %>%
+         summarise(n=n()) 
+       
+       x%>% 
+         left_join(z, by="destfatt") %>% 
          group_by("Cliente" = destfatt, n) %>% 
          summarise("Totale esami" = sum(Esami), 
                    "Media settimanale" = round(mean((Esami)),2),
@@ -242,7 +277,7 @@ output$download_pivot <- downloadHandler(
     "pivot.xlsx"
   },
   content = function(file) {
-    writexl::write_xlsx(pivot_tbl(), path = file)
+  writexl::write_xlsx(pivot_tbl(), path =file)
   }
   
 )

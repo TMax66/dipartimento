@@ -19,9 +19,8 @@ tags$p("Settore: Alimenti Uomo"),
                 hr(),
                 
                  selectInput("pr", "Seleziona Gruppo Matrice", 
-                             c("Tutte", "CARNI E DERIVATI",
-                               "IGIENE DELLA MAC", "ACQUA", "TAMPONI-AMBIENTALI",
-                               "PROD.LATTIERO CASEARI"))
+                             
+                             c("Tutte", unique(as.character(dati$Matrici))))
                ), 
                mainPanel(
                  column(6, 
@@ -59,16 +58,14 @@ tags$p("Settore: Alimenti Uomo"),
                       sidebarPanel(
                         selectInput("rep", "Seleziona Reparto", 
                             c( "Tutti", unique(as.character(dati$reparto))) ),
-                        sliderInput("mes", "media settimanale n. di esami", 
+                        sliderInput("mes", "top clienti", 
                                     min=1, max= 50, value=10)),
                    
                     mainPanel(
-                     
-                      plotOutput("timecl"), 
+                      DT::dataTableOutput("clienti"),
                       hr(),
-                      br(),
-                      DT::dataTableOutput("clienti")
-                        
+                      br()
+                      #plotOutput("timecl")
                       )
                     
                     )), 
